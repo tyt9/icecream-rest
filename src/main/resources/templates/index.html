@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<div>아이스크림 종류:<br>
+    <th:block th:each="product, iterStat : ${products}">
+        <input type="radio" name="product" th:value="${product.productId}" th:attr="data-price=${product.price}, data-name=${product.productName}" th:disabled="${product.stockQuantity == 0}">
+        <span th:text="${product.productName}"></span><small th:text="${product.price}"></small><small th:if="${product.stockQuantity == 0}"> (품절)</small><br>
+    </th:block>
+</div>
+<br>
+<div>토핑 종류:<br>
+    <th:block th:each="topping : ${toppings}">
+        <input type="checkbox" name="topping" th:attr="data-price=${topping.additionalPrice}, data-name=${topping.toppingName}" th:value="${topping.toppingId}" th:disabled="${topping.stockQuantity == 0}">
+        <span th:text="${topping.toppingName}"></span><small th:text="${topping.additionalPrice}"></small><small th:if="${topping.stockQuantity == 0}"> (품절)</small><br>
+    </th:block>
+</div>
+<input type="button" id="addBtn" value="담기">
+<div id="cart"></div>
+<h3 id="total">총 금액 : 0원</h3>
+<input type="button" id="orderBtn" value="주문하기">
+
+
+
+<hr>
+<div id="detail"></div>
+<h2>주문 내역</h2>
+<input type="button" id="historyBtn" value="주문 내역 보기">
+<div id="history"></div>
+<div>
+    <button id="prevBtn">이전</button>
+    <span id="pageInfo"></span>
+    <button id="nextBtn">다음</button>
+</div>
+
+
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+
+    $('input[name="product"]:enabled').first().prop('checked', true);
+
+    let total = 0;
+    const cart = [];
+
+$('#addBtn').click(function () {
+    const productId = $('input[name="product"]:checked').val()
+    if (!productId) {
+    alert('아이스크림을 골라주세요');
+    return;
+    }
+    const productName = $('input[name="product"]:checked').data('name');
+    const productPrice = $('input[name="product"]:checked').data('price');
+    console.log(productId);
+    console.log(productName);
+    console.log(productPrice);
+    const toppings = [];
+    const toppingNames = [];
+    let toppingPrice = 0;
+    $('input[name="topping"]:checked').each(function () {
+        toppings.push($(this).val());
+        toppingNames.push($(this).data('name'));
+        toppingPrice = toppingPrice + $(this).data('price');
+    })
+    console.log(toppings);
+    console.log(toppingNames);
+    cart.push({
+        productId: productId,
+        toppingIds: toppings,
+    });
+    console.log(cart);
+    $('#cart').append('<p>' + productName + ' + ' + toppingNames.join(', ') + ' = ' + (productPrice + toppingPrice) + '</p>')
+    total = total + productPrice + toppingPrice;
+    $('#total').text('총 금액 : ' + total + '원')
+    $('input[name="topping"]').prop('checked', false)
+});
+
+    $('#orderBtn').click(function () {
+    if (cart.length === 0) {
+        alert('담은 아이스크림이 없어요');
+        return;
+    }
+    $('#orderBtn').prop('disabled', true);
+    $.ajax({
+        url: '/api/orders',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(cart),
+        success: function (orderId) {
+            alert(orderId + '번 주문 완료!');
+            location.href = '/';
+        },
+        error: function (xhr) {
+            alert(xhr.responseText || '주문 실패');
+            $('#orderBtn').prop('disabled', false);
+        }
+    });
+});
+
+let currentPage = 1;
+
+function loadHistory(page) {
+    $.ajax({
+        url: '/api/orders?page=' + page,
+        type: 'GET',
+        success: function (data) {
+            currentPage = data.page;
+            $('#history').empty();
+
+            $.each(data.orders, function (i, order) {
+                $('#history').append('<p>' + order.orderId + '번 | ' + order.orderDateTime.replace('T', ' ') + ' | ' + order.totalAmount + '원 <button class="detailBtn" data-id="' + order.orderId + '">상세 </button><button class="cancelBtn" data-id="' + order.orderId + '">취소</button>' + '</p>')
+            });
+
+            $('#pageInfo').text(data.page + ' / ' + data.totalPages);
+            $('#prevBtn').prop('disabled', data.page <= 1);
+            $('#nextBtn').prop('disabled', data.page >= data.totalPages);
+        }
+    });
+}
+
+$('#historyBtn').click(function () { loadHistory(1); });
+$('#prevBtn').click(function () { loadHistory(currentPage - 1); });
+$('#nextBtn').click(function () { loadHistory(currentPage + 1); });
+
+
+    $(document).on('click', '.detailBtn', function () {
+    const orderId = $(this).data('id');
+    $.ajax({
+        url: '/api/orders/' + orderId,
+        type: 'GET',
+        success: function (order) {
+            $('#detail').empty();
+            $('#detail').append('<p>' + order.orderId + '번 | ' + order.orderDateTime.replace('T', ' ') + ' | ' + order.totalAmount + '원</p>');
+            $.each(order.items, function (i, item) {
+                $('#detail').append('<p>' + item.productName + '</p>');
+                $.each(item.toppings, function (j, topping) {
+                    $('#detail').append('<p>- ' + topping.toppingName + '</p>');
+                });
+            });
+        },
+        error: function (xhr) {
+            alert(xhr.status === 404 ? '없는 주문입니다' : '조회 실패');
+        }
+    });
+});
+
+    $(document).on('click', '.cancelBtn', function () {
+    const orderId = $(this).data('id');
+    if (!confirm(orderId + '번 주문을 취소할까요?')) {
+        return;
+    }
+    $.ajax({
+        url: '/api/orders/' + orderId,
+        type: 'DELETE',
+        success: function () {
+            alert('취소되었습니다');
+            loadHistory(currentPage);
+        },
+        error: function (xhr) {
+            alert(xhr.status === 404 ? '없는 주문입니다' : '취소 실패');
+        }
+    });
+});
+
+
+
+
+
+</script>
+</body>
+</html>

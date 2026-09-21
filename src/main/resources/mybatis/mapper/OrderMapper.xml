@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.parfait.icecream.dao.OrderDAO">
+    <select id="selectProductPrice" resultType="int">
+        select price from product where ProductID = #{productId}
+    </select>
+
+    <select id="selectToppingPrice" resultType="int">
+        select additionalPrice from topping where ToppingID = #{toppingId}
+    </select>
+
+    <insert id="insertOrder" parameterType="com.parfait.icecream.dto.Order"
+            useGeneratedKeys="true" keyProperty="orderId">
+        insert into orders(orderDateTime, TotalAmount) values(now(), #{totalAmount})
+    </insert>
+
+    <insert id="insertOrderDetail" parameterType="com.parfait.icecream.dto.OrderDetail"
+            useGeneratedKeys="true" keyProperty="detailId">
+        insert into orderDetail(orderId, productId,Quantity) values(#{orderId}, #{productId}, 1)
+    </insert>
+
+    <insert id="insertToppingDetail">
+        insert into toppingdetail(orderDetailId, ToppingId, toppingQuantity) values(#{orderDetailId}, #{toppingId}, 1)
+    </insert>
+
+    <update id="decreaseProductStock">
+        update product set StockQuantity = StockQuantity - 1 where productId = #{productId} and stockQuantity >= 1
+    </update>
+
+    <update id="decreaseToppingStock">
+        update topping set StockQuantity = StockQuantity - 1 where toppingId = #{toppingId} and stockQuantity >= 1
+    </update>
+
+    <select id="selectOrders" resultType="com.parfait.icecream.dto.Order">
+        select orderId, orderDateTime, TotalAmount from orders where del = 0 order by OrderID desc limit #{size} offset #{offset}
+    </select>
+
+    <resultMap id="orderResultMap" type="com.parfait.icecream.dto.OrderResult">
+        <id     property="orderId"       column="OrderID"/>
+        <result property="orderDateTime" column="OrderDateTime"/>
+        <result property="totalAmount"   column="TotalAmount"/>
+
+        <collection property="items" ofType="com.parfait.icecream.dto.OrderResultItem">
+            <id     property="detailId"    column="DetailID"/>
+            <result property="productName" column="ProductName"/>
+
+            <collection property="toppings" ofType="com.parfait.icecream.dto.OrderResultTopping">
+                <id     property="toppingDetailId" column="ToppingDetailID"/>
+                <result property="toppingName"     column="ToppingName"/>
+            </collection>
+        </collection>
+    </resultMap>
+
+    <select id="selectOrder" resultMap="orderResultMap">
+        select o.OrderID, o.OrderDateTime, o.TotalAmount, od.DetailID, p.ProductName, td.ToppingDetailID, t.ToppingName
+        from orders o
+        left outer join orderdetail od on od.OrderID = o.OrderID
+        left outer join toppingdetail td on td.orderDetailID = od.DetailID
+        left outer join product p on p.ProductID = od.ProductID
+        left outer join topping t on t.ToppingID = td.ToppingID
+        where o.del = 0 and o.OrderID = #{orderId}
+    </select>
+
+    <update id="cancelOrder">
+        UPDATE orders SET del = 1 WHERE orderId = #{orderId} and del = 0
+    </update>
+
+    <select id="countOrders">
+        select count(*) from orders where del = 0
+    </select>
+
+</mapper>
