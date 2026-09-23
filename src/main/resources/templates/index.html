@@ -95,7 +95,7 @@ $('#addBtn').click(function () {
             location.href = '/';
         },
         error: function (xhr) {
-            alert(xhr.responseText || '주문 실패');
+            alert(xhr.responseJSON ? xhr.responseJSON.message : '주문 실패');
             $('#orderBtn').prop('disabled', false);
         }
     });
