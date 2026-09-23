@@ -22,13 +22,12 @@
 | 메서드 | 주소 | 설명 | 응답 |
 |---|---|---|---|
 | `GET` | `/api/products` | 상품 목록 | `200` |
-| `POST` | `/api/orders` | 주문 생성 | `201` 주문번호 / `400` 품절 |
+| `POST` | `/api/orders` | 주문 생성 | `201` 주문번호 / `400` 입력 오류·품절·없는 상품 |
 | `GET` | `/api/orders?page=1&size=10` | 주문 목록 (페이징) | `200` |
 | `GET` | `/api/orders/{orderId}` | 주문 상세 (아이스크림 · 토핑) | `200` / `404` |
 | `DELETE` | `/api/orders/{orderId}` | 주문 취소 (소프트 삭제) | `204` / `404` |
-| `POST` | `/api/orders` | 주문 생성 | `201` 주문번호 / `400` 품절·없는 상품 |
 
-화면은 Thymeleaf로 처음 로딩하고, 주문 · 조회 · 취소 같은 버튼 동작은 jQuery로 위 API를 호출합니다.
+에러는 `{ "code": "SOLD_OUT", "message": "..." }` 형식으로 응답합니다.
 
 <br>
 
@@ -109,7 +108,7 @@ WHERE ProductID = #{productId} AND StockQuantity >= 1
 
 ## 개선 예정
 
-- [ ] 요청 값 검증(`@Valid`) 및 에러 응답 형식 통일 (`@RestControllerAdvice`)
+- [x] 요청 값 검증(`@Valid`) 및 에러 응답 형식 통일 (`@RestControllerAdvice`)
 - [x] 존재하지 않는 상품과 품절 상품 구분
 - [ ] 주문 상세에 주문 시점의 상품명 · 단가 저장 (가격이 바뀌어도 과거 주문 금액이 변하지 않도록)
 

@@ -1,10 +1,8 @@
 package com.parfait.icecream.controller;
 
-import com.parfait.icecream.dto.Order;
-import com.parfait.icecream.dto.OrderItemRequest;
-import com.parfait.icecream.dto.OrderPage;
-import com.parfait.icecream.dto.OrderResult;
+import com.parfait.icecream.dto.*;
 import com.parfait.icecream.service.OrderService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,8 +17,8 @@ public class OrderApiController {
     private final OrderService orderService;
 
     @PostMapping("/orders")
-    public ResponseEntity<Integer> createOrder(@RequestBody List<OrderItemRequest> items) {
-        int orderId = orderService.placeOrder(items);
+    public ResponseEntity<Integer> createOrder(@RequestBody @Valid OrderCreateRequest request) {
+        int orderId = orderService.placeOrder(request.getItems());
         return ResponseEntity.status(HttpStatus.CREATED).body(orderId);
     }
 

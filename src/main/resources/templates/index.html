@@ -89,7 +89,7 @@ $('#addBtn').click(function () {
         url: '/api/orders',
         type: 'POST',
         contentType: 'application/json',
-        data: JSON.stringify(cart),
+        data: JSON.stringify({ items: cart }),
         success: function (orderId) {
             alert(orderId + '번 주문 완료!');
             location.href = '/';
