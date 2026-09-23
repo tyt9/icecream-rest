@@ -14,7 +14,6 @@ import java.util.List;
 @NoArgsConstructor
 @ToString
 public class OrderItemRequest {
-
     @NotBlank(message = "상품을 선택해주세요")
     private String productId;
 

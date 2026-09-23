@@ -12,7 +12,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 public class OrderCreateRequest {
-
+    
     @NotEmpty(message = "주문할 상품이 없습니다")
     @Valid
     private List<OrderItemRequest> items;

@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<ErrorResponse> handleSoldOut(IllegalStateException e) {
         return ResponseEntity.badRequest().body(new ErrorResponse("SOLD_OUT", e.getMessage()));
