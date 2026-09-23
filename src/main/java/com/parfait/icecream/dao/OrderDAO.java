@@ -22,4 +22,6 @@ public interface OrderDAO {
     OrderResult selectOrder(int orderId);
     int cancelOrder(int orderId);
     int countOrders();
+    int countProduct(String productId);
+    int countTopping(String toppingId);
 }

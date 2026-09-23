@@ -18,12 +18,18 @@ public class OrderService {
         int total = 0;
         for (OrderItemRequest item : items) {
             if (orderDAO.decreaseProductStock(item.getProductId()) == 0) {
+                if (orderDAO.countProduct(item.getProductId()) == 0) {
+                    throw new IllegalArgumentException("존재하지 않는 상품입니다: " + item.getProductId());
+                }
                 throw new IllegalStateException("품절된 상품입니다: " + item.getProductId());
             }
             total += orderDAO.selectProductPrice(item.getProductId());
             for (String toppingId : item.getToppingIds()) {
                 if (orderDAO.decreaseToppingStock(toppingId) == 0) {
-                    throw new IllegalStateException("품절된 상품입니다: " + toppingId);
+                    if (orderDAO.countTopping(toppingId) == 0) {
+                        throw new IllegalArgumentException("존재하지 않는 토핑입니다: " + toppingId);
+                    }
+                    throw new IllegalStateException("품절된 토핑입니다: " + toppingId);
                 }
                 total += orderDAO.selectToppingPrice(toppingId);
             }

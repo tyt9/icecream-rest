@@ -29,6 +29,11 @@ public class OrderApiController {
         return ResponseEntity.badRequest().body(e.getMessage());
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<String> handleNotFound(IllegalArgumentException e) {
+        return ResponseEntity.badRequest().body(e.getMessage());
+    }
+
     @GetMapping("/orders")
     public OrderPage getOrders(@RequestParam(defaultValue = "1") int page,
                                @RequestParam(defaultValue = "10") int size) {

@@ -71,4 +71,12 @@
         select count(*) from orders where del = 0
     </select>
 
+    <select id="countProduct" resultType="int">
+        select count(*) from product where ProductID = #{productId}
+    </select>
+
+    <select id="countTopping" resultType="int">
+        select count(*) from topping where toppingID = #{toppingId}
+    </select>
+
 </mapper>
